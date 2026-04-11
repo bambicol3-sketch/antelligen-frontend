@@ -28,7 +28,7 @@ export function useAuthCallback() {
           });
           router.replace(`/terms?${params.toString()}`);
         } else {
-          localStorage.setItem("token", token);
+          localStorage.setItem("user_token", token);
           const user = { id: meResponse.email, email: meResponse.email, nickname: meResponse.nickname };
           setAuth({ status: "AUTHENTICATED", user });
           setAuthState({ status: "AUTHENTICATED", user });

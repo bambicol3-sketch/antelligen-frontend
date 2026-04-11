@@ -9,6 +9,7 @@ const menuItems = [
   { label: "Board", href: "/board" },
   { label: "Youtube", href: "/youtube" },
   { label: "주식 추천", href: "/stock-recommendation" },
+  { label: "뉴스", href: "/news" },
 ];
 
 interface NavbarProps {
@@ -39,6 +40,11 @@ export default function Navbar({ isAuthenticated = false, onLogout }: NavbarProp
               {item.label}
             </Link>
           ))}
+          {isAuthenticated && (
+            <Link href="/news/saved" className={menuItemStyle("/news/saved")}>
+              저장된 기사
+            </Link>
+          )}
           {isAuthenticated ? (
             <button onClick={onLogout} className={navbarStyles.authButton.logout}>
               Logout
