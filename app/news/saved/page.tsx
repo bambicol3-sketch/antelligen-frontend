@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useRouter } from "next/navigation";
+import { authAtom } from "@/features/auth/application/atoms/authAtom";
 import { getSavedArticles, deleteBookmark, type SavedArticleItem } from "@/features/news/infrastructure/api/newsApi";
 import { newsListStyles as s } from "@/features/news/ui/components/newsListStyles";
 
@@ -10,6 +13,8 @@ const deleteButtonStyle =
   "shrink-0 rounded-md border border-red-200 bg-white px-3 py-1 text-xs text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-zinc-700";
 
 export default function SavedNewsPage() {
+  const authState = useAtomValue(authAtom);
+  const router = useRouter();
   const [articles, setArticles] = useState<SavedArticleItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -17,6 +22,11 @@ export default function SavedNewsPage() {
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
+    if (authState.status === "LOADING") return;
+    if (authState.status === "UNAUTHENTICATED") {
+      router.replace("/login");
+      return;
+    }
     setStatus("loading");
     getSavedArticles(page, PAGE_SIZE)
       .then((result) => {
@@ -25,7 +35,7 @@ export default function SavedNewsPage() {
         setStatus("success");
       })
       .catch(() => setStatus("error"));
-  }, [page]);
+  }, [page, authState.status, router]);
 
   async function handleDelete(articleId: number) {
     setDeletingIds((prev) => new Set(prev).add(articleId));
