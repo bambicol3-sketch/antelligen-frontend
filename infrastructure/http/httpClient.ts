@@ -24,7 +24,12 @@ export async function httpClient<T>(
 
   if (!response.ok) {
     if (response.status === 401 && typeof window !== "undefined") {
-      window.location.replace("/login");
+      const token = localStorage.getItem("user_token");
+      if (token) {
+        // 토큰은 있지만 세션 만료 → 토큰 제거 후 로그인으로 이동
+        localStorage.removeItem("user_token");
+        window.location.replace("/login");
+      }
     }
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
