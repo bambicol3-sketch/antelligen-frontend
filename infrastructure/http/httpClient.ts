@@ -1,11 +1,5 @@
 import { env } from "@/infrastructure/config/env";
 
-function getAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export async function httpClient<T>(
   path: string,
   options?: RequestInit
@@ -17,7 +11,6 @@ export async function httpClient<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(),
       ...options?.headers,
     },
   });
