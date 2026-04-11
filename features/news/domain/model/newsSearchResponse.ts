@@ -1,15 +1,14 @@
 export interface NewsSearchResponseItem {
-  news_id: string;
   title: string;
-  content: string;
+  snippet: string;
   source: string;
-  url: string;
+  link: string | null;
   published_at: string;
 }
 
 export interface NewsSearchResponse {
-  news_list: NewsSearchResponseItem[];
+  articles: NewsSearchResponseItem[];
   page: number;
-  total_pages: number;
+  page_size: number;
   total_count: number;
 }

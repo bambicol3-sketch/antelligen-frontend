@@ -11,7 +11,7 @@ export function useAuth() {
   const router = useRouter();
 
   function logout() {
-    document.cookie = "user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    localStorage.removeItem("user_token");
     setAuth({ status: "UNAUTHENTICATED" });
     router.push("/login");
   }

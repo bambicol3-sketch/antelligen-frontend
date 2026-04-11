@@ -1,7 +1,49 @@
 "use client";
 
+import { useState } from "react";
 import { useNewsList } from "@/features/news/application/hooks/useNewsList";
 import { newsListStyles as s } from "@/features/news/ui/components/newsListStyles";
+import { saveArticle } from "@/features/news/infrastructure/api/newsApi";
+import type { NewsArticle } from "@/features/news/domain/model/newsArticle";
+
+function SaveButton({ article }: { article: NewsArticle }) {
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "duplicate">("idle");
+
+  if (!article.url) return null;
+
+  async function handleSave() {
+    setStatus("saving");
+    try {
+      await saveArticle({
+        title: article.title,
+        link: article.url,
+        source: article.source,
+        published_at: article.publishedAt,
+        snippet: article.content,
+      });
+      setStatus("saved");
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes("409")) {
+        setStatus("duplicate");
+      } else {
+        setStatus("idle");
+      }
+    }
+  }
+
+  if (status === "saved") return <span className={s.item.savedBadge}>저장됨</span>;
+  if (status === "duplicate") return <span className={s.item.savedBadge}>이미 저장된 기사</span>;
+
+  return (
+    <button
+      className={s.item.saveButton}
+      onClick={handleSave}
+      disabled={status === "saving"}
+    >
+      {status === "saving" ? "저장 중..." : "저장하기"}
+    </button>
+  );
+}
 
 export default function NewsList() {
   const { newsState, page, goToPage } = useNewsList();
@@ -45,14 +87,17 @@ export default function NewsList() {
       <ul className={s.list}>
         {articles.map((article) => (
           <li key={article.newsId} className={s.item.wrap}>
-            <a
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={s.item.title}
-            >
-              {article.title}
-            </a>
+            <div className="flex items-start justify-between gap-4">
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={s.item.title}
+              >
+                {article.title}
+              </a>
+              <SaveButton article={article} />
+            </div>
             <div className={s.item.meta}>
               <span className={s.item.source}>{article.source}</span>
               <span>{new Date(article.publishedAt).toLocaleDateString("ko-KR")}</span>

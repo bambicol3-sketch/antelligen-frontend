@@ -16,6 +16,8 @@ export const newsListStyles = {
     meta: "flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400",
     source: "font-medium",
     content: "mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300",
+    saveButton: "shrink-0 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
+    savedBadge: "shrink-0 text-xs text-green-600 dark:text-green-400",
   },
   pagination: {
     wrap: "mt-8 flex items-center justify-center gap-2",
