@@ -11,7 +11,6 @@ export function useAuth() {
   const router = useRouter();
 
   function logout() {
-    localStorage.removeItem("user_token");
     setAuth({ status: "UNAUTHENTICATED" });
     router.push("/login");
   }

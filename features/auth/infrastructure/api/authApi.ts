@@ -16,14 +16,10 @@ export function redirectOAuthLogin(provider: OAuthProvider): void {
   window.location.href = env.apiBaseUrl + getProviderPath(provider);
 }
 
-export async function fetchAuthMe(token?: string): Promise<AuthMeResponse> {
-  const url = token
-    ? `${env.apiBaseUrl}/authentication/me?token=${token}`
-    : `${env.apiBaseUrl}/authentication/me`;
-
-  const response = await fetch(url, {
+export async function fetchAuthMe(): Promise<AuthMeResponse> {
+  const response = await fetch(`${env.apiBaseUrl}/authentication/me`, {
     method: "GET",
-    credentials: "include",
+    credentials: "include", // HttpOnly 쿠키 자동 전송
   });
 
   if (!response.ok) {

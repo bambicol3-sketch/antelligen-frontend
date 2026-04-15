@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSetAtom } from "jotai";
 import { fetchAuthMe } from "@/features/auth/infrastructure/api/authApi";
 import { authAtom } from "@/features/auth/application/atoms/authAtom";
@@ -9,16 +9,12 @@ import type { AuthState } from "@/features/auth/domain/state/authState";
 
 export function useAuthCallback() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [authState, setAuthState] = useState<AuthState>({ status: "LOADING" });
   const setAuth = useSetAtom(authAtom);
 
   useEffect(() => {
-    const token = searchParams.get("token");
-
-    if (!token) return;
-
-    fetchAuthMe(token)
+    // 쿠키는 백엔드 리다이렉트 시 이미 설정됨 — 별도 토큰 처리 불필요
+    fetchAuthMe()
       .then((meResponse) => {
         if (!meResponse.is_registered) {
           setAuthState({ status: "TEMPORARY_TOKEN" });
@@ -28,7 +24,6 @@ export function useAuthCallback() {
           });
           router.replace(`/terms?${params.toString()}`);
         } else {
-          localStorage.setItem("user_token", token);
           const user = { id: meResponse.email, email: meResponse.email, nickname: meResponse.nickname };
           setAuth({ status: "AUTHENTICATED", user });
           setAuthState({ status: "AUTHENTICATED", user });
@@ -40,7 +35,7 @@ export function useAuthCallback() {
         setAuthState({ status: "UNAUTHENTICATED" });
         router.replace("/login");
       });
-  }, [router, searchParams, setAuth]);
+  }, [router, setAuth]);
 
   return { authState };
 }

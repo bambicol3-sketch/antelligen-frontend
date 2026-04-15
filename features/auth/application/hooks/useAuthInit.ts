@@ -9,14 +9,8 @@ export function useAuthInit() {
   const setAuth = useSetAtom(authAtom);
 
   useEffect(() => {
-    const token = localStorage.getItem("user_token");
-
-    if (!token) {
-      setAuth({ status: "UNAUTHENTICATED" });
-      return;
-    }
-
-    fetchAuthMe(token)
+    // localStorage 대신 쿠키 기반 인증 — fetchAuthMe가 쿠키를 자동으로 전송
+    fetchAuthMe()
       .then((meResponse) => {
         if (meResponse.is_registered) {
           setAuth({
@@ -32,7 +26,6 @@ export function useAuthInit() {
         }
       })
       .catch(() => {
-        localStorage.removeItem("user_token");
         setAuth({ status: "UNAUTHENTICATED" });
       });
   }, [setAuth]);

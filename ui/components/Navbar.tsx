@@ -11,6 +11,7 @@ const menuItems = [
   { label: "뉴스", href: "/news" },
   { label: "주식 추천", href: "/stock-recommendation" },
   { label: "투자", href: "/stock" },
+  { label: "투자 페이지", href: "/investment" },
 ];
 
 interface NavbarProps {
