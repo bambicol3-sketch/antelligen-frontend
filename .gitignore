@@ -41,5 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 # oh-my-claudecode
-.omc/.claude/settings.local.json
 .omc/
+.claude/settings.local.json
