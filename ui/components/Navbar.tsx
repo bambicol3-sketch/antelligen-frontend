@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { navbarStyles } from "@/ui/components/navbar/navbarStyles";
 
 const menuItems = [
@@ -22,9 +23,11 @@ interface NavbarProps {
 
 export default function Navbar({ isAuthenticated = false, onLogout }: NavbarProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const menuItemStyle = (href: string) => {
-    const isActive = pathname === href;
+    const isActive = mounted && pathname === href;
     return [
       navbarStyles.menuItem.base,
       isActive ? navbarStyles.menuItem.active : navbarStyles.menuItem.default,
