@@ -1,4 +1,4 @@
-export type TimelineCategory = "PRICE" | "CORPORATE" | "ANNOUNCEMENT";
+export type TimelineCategory = "PRICE" | "CORPORATE" | "ANNOUNCEMENT" | "NEWS" | "MACRO";
 
 export interface HypothesisResult {
   hypothesis: string;
@@ -14,6 +14,11 @@ export interface TimelineEvent {
   source: string | null;
   url: string | null;
   causality: HypothesisResult[] | null;
+  // ETF holdings 분해 시 constituent 이벤트에 채워짐. ETF 자체 이벤트는 null.
+  constituent_ticker?: string | null;
+  weight_pct?: number | null;
+  // MACRO 이벤트의 LLM 랭커 점수(0~1). curated seed는 1.0. UI 강조에 사용.
+  importance_score?: number | null;
 }
 
 export interface TimelineResponse {
@@ -22,4 +27,5 @@ export interface TimelineResponse {
   count: number;
   events: TimelineEvent[];
   is_etf: boolean;
+  asset_type?: string;
 }

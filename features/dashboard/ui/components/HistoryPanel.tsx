@@ -11,7 +11,8 @@ import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimeline
 import { useLazyTitles } from "@/features/history/application/useLazyTitles";
 import { enrichTitlesAtom } from "@/features/history/application/historyAtoms";
 import type { TimelineEvent } from "@/features/dashboard/domain/model/timelineEvent";
-import { useEffect, useRef } from "react";
+import CategoryFilterChips, { type CategoryFilter } from "@/features/dashboard/ui/components/CategoryFilterChips";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function HistorySkeleton() {
   return (
@@ -60,7 +61,10 @@ export default function HistoryPanel() {
   useTimeline();
 
   const timelineState = useAtomValue(timelineAtom);
-  const lazyEvents = timelineState.status === "SUCCESS" ? timelineState.events : [];
+  const lazyEvents = useMemo(
+    () => (timelineState.status === "SUCCESS" ? timelineState.events : []),
+    [timelineState]
+  );
   const lazyTicker = timelineState.status === "SUCCESS" ? timelineState.ticker : "";
   const lazyPeriod = timelineState.status === "SUCCESS" ? timelineState.period : "";
   const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, period: lazyPeriod });
@@ -72,6 +76,20 @@ export default function HistoryPanel() {
   const setPeriod = useSetAtom(periodAtom);
   const period = useAtomValue(periodAtom);
   const [enrichTitles, setEnrichTitles] = useAtom(enrichTitlesAtom);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
+
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<CategoryFilter, number>> = { ALL: lazyEvents.length };
+    for (const ev of lazyEvents) {
+      counts[ev.category] = (counts[ev.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [lazyEvents]);
+
+  const visibleEvents = useMemo(() => {
+    if (categoryFilter === "ALL") return lazyEvents;
+    return lazyEvents.filter((ev) => ev.category === categoryFilter);
+  }, [lazyEvents, categoryFilter]);
 
   // 1D가 아닌 period로 변경되면 선택 초기화
   useEffect(() => {
@@ -199,20 +217,36 @@ export default function HistoryPanel() {
       )}
 
       {timelineState.status === "SUCCESS" && timelineState.events.length > 0 && (
-        <div ref={scrollRef} className="max-h-96 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:theme(colors.zinc.300)_transparent] dark:[scrollbar-color:theme(colors.zinc.700)_transparent]">
-          {timelineState.events.map((event, idx) => (
-            <LazyTimelineEventCard
-              key={`${event.date}-${idx}`}
-              event={event}
-              eventIdx={idx}
-              eventKey={`${timelineState.ticker}:${timelineState.period}:${idx}`}
-              isLast={idx === timelineState.events.length - 1}
-              isSelected={selectedTimelineEvent?.idx === idx}
-              cardRef={getCardRef(idx)}
-              onClick={handleClick}
-            />
-          ))}
-        </div>
+        <>
+          <CategoryFilterChips
+            selected={categoryFilter}
+            onChange={setCategoryFilter}
+            counts={categoryCounts}
+          />
+          {visibleEvents.length === 0 ? (
+            <div className="flex h-24 items-center justify-center">
+              <p className="text-sm text-zinc-400">선택한 카테고리에 이벤트가 없습니다.</p>
+            </div>
+          ) : (
+            <div ref={scrollRef} className="max-h-96 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:theme(colors.zinc.300)_transparent] dark:[scrollbar-color:theme(colors.zinc.700)_transparent]">
+              {visibleEvents.map((event) => {
+                const idx = lazyEvents.indexOf(event);
+                return (
+                  <LazyTimelineEventCard
+                    key={`${event.date}-${idx}`}
+                    event={event}
+                    eventIdx={idx}
+                    eventKey={`${timelineState.ticker}:${timelineState.period}:${idx}`}
+                    isLast={idx === lazyEvents.length - 1}
+                    isSelected={selectedTimelineEvent?.idx === idx}
+                    cardRef={getCardRef(idx)}
+                    onClick={handleClick}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

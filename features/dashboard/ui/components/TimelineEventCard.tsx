@@ -3,11 +3,17 @@
 import { useState } from "react";
 import type { TimelineEvent, TimelineCategory } from "@/features/dashboard/domain/model/timelineEvent";
 
-const CATEGORY_STYLE: Record<TimelineCategory, { bg: string; text: string; label: string }> = {
+type CategoryStyle = { bg: string; text: string; label: string };
+
+const CATEGORY_STYLE: Record<TimelineCategory, CategoryStyle> = {
   PRICE:        { bg: "bg-amber-500/10",   text: "text-amber-500",   label: "가격" },
   CORPORATE:    { bg: "bg-blue-500/10",    text: "text-blue-500",    label: "기업" },
   ANNOUNCEMENT: { bg: "bg-emerald-500/10", text: "text-emerald-500", label: "공시" },
+  NEWS:         { bg: "bg-sky-500/10",     text: "text-sky-500",     label: "뉴스" },
+  MACRO:        { bg: "bg-violet-500/10",  text: "text-violet-500",  label: "매크로" },
 };
+
+const FALLBACK_STYLE: CategoryStyle = { bg: "bg-zinc-500/10", text: "text-zinc-500", label: "기타" };
 
 interface Props {
   event: TimelineEvent;
@@ -22,7 +28,17 @@ interface Props {
 
 export default function TimelineEventCard({ event, eventIdx, isLast = false, isSelected = false, cardRef, titleOverride, isTitleLoading = false, onClick }: Props) {
   const [causalityOpen, setCausalityOpen] = useState(false);
-  const style = CATEGORY_STYLE[event.category];
+  const style = CATEGORY_STYLE[event.category] ?? FALLBACK_STYLE;
+
+  const importance = event.importance_score ?? 0;
+  const isHighImportance = event.category === "MACRO" && importance >= 0.8;
+  const isTopTier = event.category === "MACRO" && importance >= 0.9;
+
+  const cardBorderClass = isSelected
+    ? "border-purple-400 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20"
+    : isHighImportance
+      ? "border-2 border-violet-400 bg-violet-50/40 dark:border-violet-500 dark:bg-violet-900/10"
+      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50";
 
   return (
     <div
@@ -41,10 +57,19 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
       </div>
 
       {/* 카드 내용 */}
-      <div className={`mb-4 flex-1 rounded-xl border p-3 transition-colors ${isSelected ? "border-purple-400 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20" : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50"}`}>
+      <div className={`mb-4 flex-1 rounded-xl border p-3 transition-colors ${cardBorderClass}`}>
         {/* 날짜 + 카테고리 */}
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="text-xs text-zinc-400">{event.date}</span>
+          <span className="flex items-center gap-1.5 text-xs text-zinc-400">
+            {isTopTier && (
+              <span
+                className="h-2 w-2 rounded-full bg-violet-500"
+                title={`중요도 ${Math.round(importance * 100)}`}
+                aria-label="역사적으로 중요한 매크로 이벤트"
+              />
+            )}
+            {event.date}
+          </span>
           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${style.bg} ${style.text}`}>
             {style.label}
           </span>
