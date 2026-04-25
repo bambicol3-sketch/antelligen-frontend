@@ -66,7 +66,7 @@ export default function HistoryPanel() {
   );
   const lazyTicker = timelineState.status === "SUCCESS" ? timelineState.ticker : "";
   const lazyPeriod = timelineState.status === "SUCCESS" ? timelineState.period : "";
-  const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, period: lazyPeriod });
+  const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, chartInterval: lazyPeriod });
   const nasdaqState = useAtomValue(nasdaqAtom);
   const economicEventState = useAtomValue(economicEventAtom);
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useAtom(selectedTimelineEventAtom);

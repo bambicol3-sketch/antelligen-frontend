@@ -12,11 +12,11 @@ const DEBOUNCE_MS = 500;
 export function useLazyTitles({
   events,
   ticker,
-  period,
+  chartInterval,
 }: {
   events: TimelineEvent[];
   ticker: string;
-  period: string;
+  chartInterval: string;
 }) {
   const store = useStore();
 
@@ -33,26 +33,26 @@ export function useLazyTitles({
   // 에서 동기 업데이트. 이후 첫 paint 전 observer/flush 콜백에 최신값이 보임.
   const eventsRef = useRef(events);
   const tickerRef = useRef(ticker);
-  const periodRef = useRef(period);
+  const chartIntervalRef = useRef(chartInterval);
   useLayoutEffect(() => {
     eventsRef.current = events;
     tickerRef.current = ticker;
-    periodRef.current = period;
-  }, [events, ticker, period]);
+    chartIntervalRef.current = chartInterval;
+  }, [events, ticker, chartInterval]);
 
-  // Reset pending state on ticker/period change
+  // Reset pending state on ticker/chartInterval change
   useEffect(() => {
     pendingRef.current.clear();
     inFlightRef.current.clear();
     visibleAtRef.current.clear();
     cardRefCallbacks.current.clear();
     if (debounceRef.current) clearTimeout(debounceRef.current);
-  }, [ticker, period]);
+  }, [ticker, chartInterval]);
 
   useEffect(() => {
     const flush = async () => {
       const t = tickerRef.current;
-      const p = periodRef.current;
+      const p = chartIntervalRef.current;
       const evts = eventsRef.current;
 
       const batch = [...pendingRef.current].filter(
@@ -118,7 +118,7 @@ export function useLazyTitles({
             (entry.target as HTMLElement).dataset.lazyTitleIdx ?? "-1"
           );
           if (idx < 0) return;
-          const key = `${tickerRef.current}:${periodRef.current}:${idx}`;
+          const key = `${tickerRef.current}:${chartIntervalRef.current}:${idx}`;
           if (inFlightRef.current.has(idx)) return;
           if (store.get(titleOverrideAtomFamily(key)) !== null) return;
           visibleAtRef.current.set(idx, performance.now());
