@@ -44,6 +44,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export default function CompanyProfileCard({ profile }: Props) {
   const homepageUrl = normalizeUrl(profile.hm_url);
   const irUrl = normalizeUrl(profile.ir_url);
+  const isUS = profile.corp_cls === "US";
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -64,49 +65,81 @@ export default function CompanyProfileCard({ profile }: Props) {
         )}
       </div>
 
+      {profile.business_summary && (
+        <section className="mb-6 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/60">
+          <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            기업 개요
+          </h3>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {profile.business_summary}
+          </p>
+          {profile.main_revenue_sources.length > 0 && (
+            <>
+              <h4 className="mt-4 mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                주요 매출원
+              </h4>
+              <ul className="list-inside list-disc space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
+                {profile.main_revenue_sources.map((src) => (
+                  <li key={src}>{src}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {profile.overview_source === "llm_only" && (
+            <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
+              ※ 사업보고서 미수집 종목으로, 일반 정보 기반 추정 요약입니다.
+            </p>
+          )}
+        </section>
+      )}
+
       <dl>
         <Row label="종목명" value={profile.stock_name} />
-        <Row label="대표자명" value={profile.ceo_nm} />
         <Row label="법인구분" value={profile.corp_cls_label} />
-        <Row label="법인등록번호" value={formatJurirNo(profile.jurir_no)} />
-        <Row label="사업자등록번호" value={formatBizrNo(profile.bizr_no)} />
-        <Row label="주소" value={profile.adres} />
-        <Row
-          label="홈페이지"
-          value={
-            homepageUrl ? (
-              <a
-                href={homepageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {profile.hm_url}
-              </a>
-            ) : null
-          }
-        />
-        <Row
-          label="IR"
-          value={
-            irUrl ? (
-              <a
-                href={irUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {profile.ir_url}
-              </a>
-            ) : null
-          }
-        />
-        <Row label="전화번호" value={profile.phn_no} />
-        <Row label="팩스" value={profile.fax_no} />
-        <Row label="업종코드" value={profile.induty_code} />
-        <Row label="설립일" value={formatDate(profile.est_dt)} />
-        <Row label="결산월" value={formatAccMt(profile.acc_mt)} />
-        <Row label="고유번호(corp_code)" value={profile.corp_code} />
+        {!isUS && (
+          <>
+            <Row label="대표자명" value={profile.ceo_nm} />
+            <Row label="법인등록번호" value={formatJurirNo(profile.jurir_no)} />
+            <Row label="사업자등록번호" value={formatBizrNo(profile.bizr_no)} />
+            <Row label="주소" value={profile.adres} />
+            <Row
+              label="홈페이지"
+              value={
+                homepageUrl ? (
+                  <a
+                    href={homepageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {profile.hm_url}
+                  </a>
+                ) : null
+              }
+            />
+            <Row
+              label="IR"
+              value={
+                irUrl ? (
+                  <a
+                    href={irUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {profile.ir_url}
+                  </a>
+                ) : null
+              }
+            />
+            <Row label="전화번호" value={profile.phn_no} />
+            <Row label="팩스" value={profile.fax_no} />
+            <Row label="업종코드" value={profile.induty_code} />
+            <Row label="설립일" value={formatDate(profile.est_dt)} />
+            <Row label="결산월" value={formatAccMt(profile.acc_mt)} />
+            <Row label="고유번호(corp_code)" value={profile.corp_code} />
+          </>
+        )}
       </dl>
     </div>
   );

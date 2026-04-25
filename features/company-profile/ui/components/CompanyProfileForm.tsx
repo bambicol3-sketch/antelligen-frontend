@@ -50,7 +50,7 @@ export default function CompanyProfileForm() {
           type="text"
           value={ticker}
           onChange={(e) => setTicker(e.target.value)}
-          placeholder="예: 005930"
+          placeholder="국내: 6자리 코드(예: 005930) · 미국: 티커(예: AAPL)"
           className="flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
           disabled={loading}
         />
@@ -73,7 +73,7 @@ export default function CompanyProfileForm() {
 
       {!profile && !error && !loading && (
         <div className="rounded-md border border-zinc-200 bg-zinc-50 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-          종목코드를 입력하면 DART 기업개황 정보를 조회합니다.
+          종목코드를 입력하면 회사 정보를 조회합니다. 국내 종목은 DART 기업개황, 미국 종목은 SEC + AI 요약 기반.
         </div>
       )}
     </div>

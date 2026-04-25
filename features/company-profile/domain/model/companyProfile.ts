@@ -17,4 +17,7 @@ export interface CompanyProfile {
   induty_code: string | null;
   est_dt: string | null;
   acc_mt: string | null;
+  business_summary: string | null;
+  main_revenue_sources: string[];
+  overview_source: string | null;
 }
