@@ -31,6 +31,11 @@ const ANNOUNCEMENT_TYPE_LABEL: Record<string, string> = {
   PRODUCT_LAUNCH: "신제품·신기술",
   CRISIS: "위기 사건",
   MAJOR_EVENT: "주요사항",
+  // v2 (KR A.1 신규 분리)
+  EARNINGS_RELEASE: "실적 발표",
+  DEBT_ISSUANCE: "회사채 발행",
+  SHAREHOLDER_MEETING: "주주총회",
+  REGULATION_FD: "공정공시",
 };
 
 interface Props {

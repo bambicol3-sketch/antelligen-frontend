@@ -11,6 +11,10 @@ import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimeline
 import { useLazyTitles } from "@/features/history/application/useLazyTitles";
 import type { TimelineEvent } from "@/features/dashboard/domain/model/timelineEvent";
 import CategoryFilterChips, { type CategoryFilter } from "@/features/dashboard/ui/components/CategoryFilterChips";
+import ImportanceFilter, {
+  DEFAULT_IMPORTANCE_FILTER,
+  type ImportanceFilterState,
+} from "@/features/dashboard/ui/components/ImportanceFilter";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 function HistorySkeleton() {
@@ -73,6 +77,9 @@ export default function HistoryPanel() {
   const chartInterval = useAtomValue(chartIntervalAtom);
   const resetExpandedEvents = useSetAtom(resetExpandedTimelineEventsAtom);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
+  const [importanceFilter, setImportanceFilter] = useState<ImportanceFilterState>(
+    DEFAULT_IMPORTANCE_FILTER,
+  );
 
   const categoryCounts = useMemo(() => {
     const counts: Partial<Record<CategoryFilter, number>> = { ALL: lazyEvents.length };
@@ -83,9 +90,25 @@ export default function HistoryPanel() {
   }, [lazyEvents]);
 
   const visibleEvents = useMemo(() => {
-    if (categoryFilter === "ALL") return lazyEvents;
-    return lazyEvents.filter((ev) => ev.category === categoryFilter);
-  }, [lazyEvents, categoryFilter]);
+    let filtered = lazyEvents;
+
+    // 카테고리 필터
+    if (categoryFilter !== "ALL") {
+      filtered = filtered.filter((ev) => ev.category === categoryFilter);
+    }
+
+    // 중요도 필터 (KR A.3) — 1~5 정수 점수 기준.
+    // MACRO 이벤트는 v2 점수가 없고 0~1 importance_score만 있으므로 통과시킨다(별도 임계값 없음).
+    filtered = filtered.filter((ev) => {
+      // MACRO는 항상 통과 (v2 미적용 영역)
+      if (ev.category === "MACRO") return true;
+      const v2 = ev.importance_score_1to5;
+      if (v2 == null) return importanceFilter.showNoise;
+      return v2 >= importanceFilter.minPoints;
+    });
+
+    return filtered;
+  }, [lazyEvents, categoryFilter, importanceFilter]);
 
   // 봉 단위(chartInterval) 변경 시 선택 초기화 — 봉 단위가 바뀌면 근접 봉 좌표가 달라지므로
   // 이전 선택을 유지하면 SVG 연결선이 엉뚱한 봉을 가리킬 수 있다.
@@ -201,6 +224,7 @@ export default function HistoryPanel() {
             onChange={setCategoryFilter}
             counts={categoryCounts}
           />
+          <ImportanceFilter value={importanceFilter} onChange={setImportanceFilter} />
           {visibleEvents.length === 0 ? (
             <div className="flex h-24 items-center justify-center">
               <p className="text-sm text-zinc-400">선택한 카테고리에 이벤트가 없습니다.</p>

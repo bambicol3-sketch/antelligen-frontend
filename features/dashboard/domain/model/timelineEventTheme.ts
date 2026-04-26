@@ -78,9 +78,38 @@ const COLOR_ZINC: TimelineColorTokens = {
   chipText: "text-zinc-600 dark:text-zinc-300",
 };
 
+// v2 신규 — 정기 IR / 자본 조달 / 일상 공시
+const COLOR_SKY: TimelineColorTokens = {
+  dot: "bg-sky-500 dark:bg-sky-400",
+  borderLeft: "border-l-sky-500 dark:border-l-sky-400",
+  chipBg: "bg-sky-500/10 dark:bg-sky-400/10",
+  chipText: "text-sky-600 dark:text-sky-300",
+};
+
+const COLOR_LIME: TimelineColorTokens = {
+  dot: "bg-lime-600 dark:bg-lime-500",
+  borderLeft: "border-l-lime-600 dark:border-l-lime-500",
+  chipBg: "bg-lime-600/10 dark:bg-lime-500/10",
+  chipText: "text-lime-700 dark:text-lime-300",
+};
+
+const COLOR_STONE: TimelineColorTokens = {
+  dot: "bg-stone-500 dark:bg-stone-400",
+  borderLeft: "border-l-stone-500 dark:border-l-stone-400",
+  chipBg: "bg-stone-500/10 dark:bg-stone-400/10",
+  chipText: "text-stone-600 dark:text-stone-300",
+};
+
+const COLOR_NEUTRAL: TimelineColorTokens = {
+  dot: "bg-neutral-400 dark:bg-neutral-500",
+  borderLeft: "border-l-neutral-300 dark:border-l-neutral-700",
+  chipBg: "bg-neutral-500/10 dark:bg-neutral-400/10",
+  chipText: "text-neutral-600 dark:text-neutral-300",
+};
+
 /** type → 색상 토큰. 매핑이 없는 type은 category fallback에서 처리한다. */
 const TYPE_COLOR: Record<string, TimelineColorTokens> = {
-  // ANNOUNCEMENT 8종
+  // ANNOUNCEMENT 8종 (v1)
   MERGER_ACQUISITION: COLOR_BLUE,
   MANAGEMENT_CHANGE: COLOR_VIOLET,
   REGULATORY: COLOR_ORANGE,
@@ -89,6 +118,11 @@ const TYPE_COLOR: Record<string, TimelineColorTokens> = {
   CRISIS: COLOR_ROSE,
   CONTRACT: COLOR_BLUE,
   MAJOR_EVENT: COLOR_ZINC,
+  // ANNOUNCEMENT v2 (KR A.1 신규 분리)
+  EARNINGS_RELEASE: COLOR_SKY,        // 정기 실적 — 하늘
+  DEBT_ISSUANCE: COLOR_LIME,          // 자본 조달 — 라임
+  SHAREHOLDER_MEETING: COLOR_STONE,   // 정기 주총 — 스톤
+  REGULATION_FD: COLOR_NEUTRAL,       // 공정공시 — 뉴트럴(낮은 시그널)
   // CORPORATE 자본행위 5종 — 모두 슬레이트
   STOCK_SPLIT: COLOR_SLATE,
   RIGHTS_OFFERING: COLOR_SLATE,
@@ -146,14 +180,25 @@ const FORCE_MEDIUM_TYPES = new Set([
   "MANAGEMENT_CHANGE",
   "RIGHTS_OFFERING",
   "PRODUCT_LAUNCH",
+  "EARNINGS_RELEASE",  // v2: 정기 실적은 시그널 있음
 ]);
 
+// v1 (0~1) 임계값
 const L_THRESHOLD = 0.85;
 const M_THRESHOLD = 0.5;
 
 export function getTimelineSize(event: TimelineEvent): TimelineSize {
   if (FORCE_LARGE_TYPES.has(event.type)) return "L";
 
+  // v2 점수 우선 (1~5 정수). 백엔드 PR #56 머지 후 채워짐.
+  const v2 = event.importance_score_1to5;
+  if (typeof v2 === "number") {
+    if (v2 >= 4) return "L";
+    if (v2 >= 3) return "M";
+    return "S";
+  }
+
+  // v1 fallback (0~1 float, MACRO 위주)
   const score = event.importance_score;
   if (typeof score === "number") {
     if (score >= L_THRESHOLD) return "L";
