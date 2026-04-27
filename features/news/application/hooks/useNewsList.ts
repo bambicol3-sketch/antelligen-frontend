@@ -45,5 +45,5 @@ export function useNewsList() {
       });
   }, [authState.status, setNewsState]);
 
-  return { newsState, page: 1, goToPage: () => {} };
+  return { newsState, page: 1, goToPage: (targetPage: number) => void targetPage };
 }

@@ -31,7 +31,7 @@ export async function fetchInvestorFlowTrend(stockCode: string): Promise<Investo
   );
 
   return {
-    stockName: data.stock_name,
+    stockName: data.stock_name ?? data.stock_code,
     stockCode: data.stock_code,
     trends: data.points.map((item) => ({
       date: item.date,

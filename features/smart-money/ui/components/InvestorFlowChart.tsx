@@ -69,8 +69,8 @@ export default function InvestorFlowChart({ stockCode, stockName, onClose }: Pro
                 tickFormatter={(v: number) => `${v}억`}
               />
               <Tooltip
-                formatter={(value: number) => [`${value}억 원`]}
-                labelFormatter={(label: string) => `날짜: ${label}`}
+                formatter={(value) => [`${value}억 원`]}
+                labelFormatter={(label) => `날짜: ${label}`}
               />
               <Legend />
               <Line type="monotone" dataKey="외국인" stroke="#3b82f6" dot={false} strokeWidth={2} />

@@ -1,12 +1,14 @@
-export interface InvestorFlowTrendResponseItem {
+export interface InvestorFlowTrendPoint {
   date: string;
-  foreigner_net_buy: number;
-  institution_net_buy: number;
-  individual_net_buy: number;
+  foreign: number;
+  institution: number;
+  individual: number;
 }
 
 export interface InvestorFlowTrendResponse {
-  stock_name: string;
   stock_code: string;
-  trends: InvestorFlowTrendResponseItem[];
+  stock_name: string | null;
+  since_date: string | null;
+  days: number;
+  points: InvestorFlowTrendPoint[];
 }
