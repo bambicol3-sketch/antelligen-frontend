@@ -27,6 +27,7 @@ import { markerVisibilityAtom } from "@/features/dashboard/application/atoms/mar
 import type { AnomalyBar } from "@/features/dashboard/infrastructure/api/anomalyBarsApi";
 import { useNasdaqChart } from "@/features/dashboard/application/hooks/useNasdaqChart";
 import { useAnomalyBars } from "@/features/dashboard/application/hooks/useAnomalyBars";
+import { useVisibleBarCount } from "@/features/dashboard/application/hooks/useVisibleBarCount";
 import ChartSkeleton from "@/features/dashboard/ui/components/skeletons/ChartSkeleton";
 import ChartIntervalTabs from "@/features/dashboard/ui/components/ChartIntervalTabs";
 import MarkerToggleChips from "@/features/dashboard/ui/components/MarkerToggleChips";
@@ -58,6 +59,9 @@ export default function NasdaqChart() {
   const markersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
 
   useAnomalyBars();
+
+  const chartApi = useAtomValue(chartApiAtom);
+  const visibleBarCount = useVisibleBarCount(chartApi);
 
   const nasdaqState = useAtomValue(nasdaqAtom);
   const timelineState = useAtomValue(timelineAtom);
@@ -236,12 +240,19 @@ export default function NasdaqChart() {
     // 1) 이상치 봉 마커 — 차트 봉 time과 anomaly date 정밀도가 다를 수 있어
     //    가장 가까운 봉으로 스냅하고, 같은 봉에 여러 이벤트가 매핑되면 |return_pct| 최대만 표시.
     //    KR7 — markerVisibility 가 false 인 type 은 표시 안 함.
+    //    KR7 줌 필터 — visibleBarCount 가 클수록(많은 봉이 보이면) zscore 마커 중 큰 변동만.
+    //                  누적/Drawdown/Cluster 는 type 자체가 큰 이벤트라 줌 필터 면제.
     const chartBars = nasdaqState.status === "SUCCESS" ? nasdaqState.bars : [];
     if (anomalyBarsState.status === "SUCCESS" && chartBars.length > 0) {
       const strongestByBar = new Map<string, AnomalyBar>();
       for (const ev of anomalyBarsState.events) {
         const evType = ev.type ?? "zscore";
         if (!markerVisibility[evType]) continue;
+        if (evType === "zscore" && visibleBarCount != null) {
+          const absReturn = Math.abs(ev.return_pct);
+          if (visibleBarCount > 500 && absReturn < 7) continue;
+          else if (visibleBarCount > 200 && absReturn < 5) continue;
+        }
         const evTs = new Date(ev.date).getTime();
         let closestTime = chartBars[0].time;
         let minDiff = Math.abs(new Date(closestTime).getTime() - evTs);
@@ -284,7 +295,7 @@ export default function NasdaqChart() {
     // lightweight-charts 는 time 오름차순으로 정렬된 markers 를 요구
     markers.sort((a, b) => String(a.time).localeCompare(String(b.time)));
     markersRef.current.setMarkers(markers);
-  }, [anomalyBarsState, nasdaqState, selectedBarTime, markerVisibility]);
+  }, [anomalyBarsState, nasdaqState, selectedBarTime, markerVisibility, visibleBarCount]);
 
   // 패널 선택 시 해당 bar로 차트 스크롤 — bar 인덱스 기준으로 가운데 정렬
   useEffect(() => {
