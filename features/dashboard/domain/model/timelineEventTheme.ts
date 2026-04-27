@@ -115,6 +115,15 @@ const COLOR_FUCHSIA: TimelineColorTokens = {
   chipText: "text-fuchsia-700 dark:text-fuchsia-300",
 };
 
+// KR6 — Type B (시장 반응) 매크로 이벤트용. Type A(발표·정책)는 기존 인디고 유지하고
+// Type B 만 도드라지는 핑크 계열로 분리해 "결과 시그널" 임을 시각적으로 구분.
+const COLOR_PINK: TimelineColorTokens = {
+  dot: "bg-pink-500 dark:bg-pink-400",
+  borderLeft: "border-l-pink-500 dark:border-l-pink-400",
+  chipBg: "bg-pink-500/10 dark:bg-pink-400/10",
+  chipText: "text-pink-600 dark:text-pink-300",
+};
+
 /** type → 색상 토큰. 매핑이 없는 type은 category fallback에서 처리한다. */
 const TYPE_COLOR: Record<string, TimelineColorTokens> = {
   // ANNOUNCEMENT 8종 (v1)
@@ -141,6 +150,15 @@ const TYPE_COLOR: Record<string, TimelineColorTokens> = {
   ARTICLES_AMENDMENT: COLOR_FUCHSIA,
 };
 
+/** KR6 — MACRO 이벤트의 macro_type(TYPE_A/TYPE_B) 별 색상.
+ * TYPE_A(발표·정책): 인디고(기존 MACRO fallback 과 동일) — 시장 신호의 1차 원인.
+ * TYPE_B(시장 반응): 핑크 — 결과 시그널이라 시각적으로 분리.
+ */
+const MACRO_TYPE_COLOR: Record<string, TimelineColorTokens> = {
+  TYPE_A: COLOR_INDIGO,
+  TYPE_B: COLOR_PINK,
+};
+
 /** category fallback — type이 매핑 테이블에 없을 때만 사용. */
 const CATEGORY_FALLBACK_COLOR: Record<string, TimelineColorTokens> = {
   CORPORATE: COLOR_SLATE,
@@ -148,9 +166,19 @@ const CATEGORY_FALLBACK_COLOR: Record<string, TimelineColorTokens> = {
   MACRO: COLOR_INDIGO,
 };
 
-/** 이벤트의 시각 톤을 결정한다. type 우선, 없으면 category, 그것도 없으면 zinc. */
+/** 이벤트의 시각 톤을 결정한다.
+ * 1) type 매핑 우선 (CORPORATE/ANNOUNCEMENT 의 세분류 색)
+ * 2) MACRO 이벤트는 macro_type(TYPE_A/TYPE_B)으로 분기
+ * 3) category fallback
+ * 4) 그것도 없으면 zinc
+ */
 export function getTimelineColor(event: TimelineEvent): TimelineColorTokens {
-  return TYPE_COLOR[event.type] ?? CATEGORY_FALLBACK_COLOR[event.category] ?? COLOR_ZINC;
+  if (TYPE_COLOR[event.type]) return TYPE_COLOR[event.type];
+  if (event.category === "MACRO" && event.macro_type) {
+    const macroColor = MACRO_TYPE_COLOR[event.macro_type];
+    if (macroColor) return macroColor;
+  }
+  return CATEGORY_FALLBACK_COLOR[event.category] ?? COLOR_ZINC;
 }
 
 // ── 크기 차등 ──────────────────────────────────────────────────────────

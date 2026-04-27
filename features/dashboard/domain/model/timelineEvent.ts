@@ -49,6 +49,15 @@ export interface TimelineEvent {
   ar_status?: string | null;
   // 매핑된 시장 벤치마크(^GSPC | ^KS11 등). status != BENCHMARK_MISSING 일 때만 채워짐.
   benchmark_ticker?: string | null;
+  // KR1 — MACRO 이벤트의 인과 분류. "TYPE_A"(원인 — FOMC/CPI 등 발표) /
+  // "TYPE_B"(결과 — VIX/금리/환율 등 시장 반응). 비-MACRO 이벤트는 null.
+  macro_type?: string | null;
+  // KR2 — Type B 이벤트의 추정 사유. 모든 단계 미해결 시 null → UI 가 "원인 미확인" 표시.
+  reason?: string | null;
+  // KR2-(3)/KR3 — 사유 신뢰도. "HIGH"(같은 날 cross-ref) / "MEDIUM"(±7일·뉴스) / "LOW"(LLM).
+  reason_confidence?: string | null;
+  // KR2-(3)/KR3 — 사유 근거(특정 사건명·발표명·기사 URL).
+  reason_evidence?: string | null;
 }
 
 export interface TimelineResponse {

@@ -29,6 +29,25 @@ const CATEGORY_STYLE: Record<TimelineCategory, CategoryStyle> = {
 
 const FALLBACK_STYLE: CategoryStyle = { bg: "bg-zinc-500/10", text: "text-zinc-500", label: "기타" };
 
+// KR6 — Type B reason 신뢰도 뱃지 스타일.
+// HIGH(같은 날 cross-ref) / MEDIUM(±7일·뉴스 검색) / LOW(LLM 추정).
+const CONFIDENCE_STYLE: Record<string, { label: string; class: string }> = {
+  HIGH:   { label: "높음", class: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  MEDIUM: { label: "중간", class: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  LOW:    { label: "추정", class: "bg-zinc-500/15 text-zinc-500 dark:text-zinc-400" },
+};
+
+function ConfidenceBadge({ level }: { level?: string | null }) {
+  if (!level) return null;
+  const style = CONFIDENCE_STYLE[level];
+  if (!style) return null;
+  return (
+    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${style.class}`}>
+      {style.label}
+    </span>
+  );
+}
+
 // ANNOUNCEMENT 세분류 라벨 (8-K Item / DART 보고서 기반).
 const ANNOUNCEMENT_TYPE_LABEL: Record<string, string> = {
   MERGER_ACQUISITION: "합병·인수",
@@ -80,6 +99,14 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
 
   const detailTypeLabel =
     event.category === "ANNOUNCEMENT" ? ANNOUNCEMENT_TYPE_LABEL[event.type] : null;
+
+  // KR6 — Type B 매크로 이벤트(시장 반응)에만 reason 노출. Type A(발표) 는 발표 자체가 사유이므로 생략.
+  const isMacroTypeB = event.macro_type === "TYPE_B";
+  // evidence 가 URL 이면 expand 영역에 링크로 노출. URL 이 아니면 reason 자체와 동일하거나 보조 라벨이라 생략.
+  const evidenceUrl =
+    event.reason_evidence && /^https?:\/\//i.test(event.reason_evidence)
+      ? event.reason_evidence
+      : null;
 
   return (
     <div
@@ -142,12 +169,39 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
           </p>
         )}
 
+        {/* KR6 — Type B 매크로 reason. always-visible(타이틀 아래). HIGH·MEDIUM·LOW 신뢰도 뱃지 동반. */}
+        {isMacroTypeB && (
+          <div className="mt-1 flex items-start gap-1.5 text-xs">
+            {event.reason ? (
+              <>
+                <span className="text-zinc-600 dark:text-zinc-300">{event.reason}</span>
+                <ConfidenceBadge level={event.reason_confidence} />
+              </>
+            ) : (
+              <span className="text-zinc-400 dark:text-zinc-500">원인 미확인</span>
+            )}
+          </div>
+        )}
+
         {/* expand 영역: detail / source / AR / causality */}
         {isExpanded && (
           <div className="mt-2 space-y-2">
             <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
               {event.detail}
             </p>
+
+            {/* KR6 — reason evidence 가 URL 이면 1차 출처 링크로 노출. */}
+            {evidenceUrl && (
+              <a
+                href={evidenceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={stopPropagation}
+                className="inline-block text-xs text-pink-500 hover:underline"
+              >
+                사유 출처 보기
+              </a>
+            )}
 
             {event.url && (
               <a
