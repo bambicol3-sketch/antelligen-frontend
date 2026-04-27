@@ -12,6 +12,7 @@ import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimeline
 import { useLazyTitles } from "@/features/history/application/useLazyTitles";
 import type { TimelineEvent } from "@/features/dashboard/domain/model/timelineEvent";
 import CategoryFilterChips, { type CategoryFilter } from "@/features/dashboard/ui/components/CategoryFilterChips";
+import MacroSubFilterChips, { type MacroTypeFilter } from "@/features/dashboard/ui/components/MacroSubFilterChips";
 import ImportanceFilter, {
   DEFAULT_IMPORTANCE_FILTER,
   type ImportanceFilterState,
@@ -80,6 +81,7 @@ export default function HistoryPanel() {
   const ticker = useAtomValue(tickerAtom);
   const resetExpandedEvents = useSetAtom(resetExpandedTimelineEventsAtom);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
+  const [macroTypeFilter, setMacroTypeFilter] = useState<MacroTypeFilter>("ALL");
   const [importanceFilter, setImportanceFilter] = useState<ImportanceFilterState>(
     DEFAULT_IMPORTANCE_FILTER,
   );
@@ -113,6 +115,12 @@ export default function HistoryPanel() {
       filtered = filtered.filter((ev) => ev.category === categoryFilter);
     }
 
+    // KR6-B — MACRO 카테고리 선택 시 macro_type 서브 필터 적용.
+    // 카테고리가 MACRO 가 아니면 macroTypeFilter 무시.
+    if (categoryFilter === "MACRO" && macroTypeFilter !== "ALL") {
+      filtered = filtered.filter((ev) => ev.macro_type === macroTypeFilter);
+    }
+
     // 중요도 필터 (KR A.3) — 1~5 정수 점수 기준.
     // MACRO 이벤트는 v2 점수가 없고 0~1 importance_score만 있으므로 통과시킨다(별도 임계값 없음).
     // 미분류(score==null) 이벤트는 v1 분류기 결과 또는 NEWS/MACRO 등 점수 미적용 영역이므로 항상 통과.
@@ -124,7 +132,19 @@ export default function HistoryPanel() {
     });
 
     return filtered;
-  }, [assetEligibleEvents, categoryFilter, importanceFilter]);
+  }, [assetEligibleEvents, categoryFilter, macroTypeFilter, importanceFilter]);
+
+  // KR6-B — MACRO 카테고리에서 Type A/B 별 카운트(asset 적합 이벤트 기반).
+  const macroTypeCounts = useMemo(() => {
+    const counts: Partial<Record<MacroTypeFilter, number>> = { ALL: 0, TYPE_A: 0, TYPE_B: 0 };
+    for (const ev of assetEligibleEvents) {
+      if (ev.category !== "MACRO") continue;
+      counts.ALL = (counts.ALL ?? 0) + 1;
+      if (ev.macro_type === "TYPE_A") counts.TYPE_A = (counts.TYPE_A ?? 0) + 1;
+      else if (ev.macro_type === "TYPE_B") counts.TYPE_B = (counts.TYPE_B ?? 0) + 1;
+    }
+    return counts;
+  }, [assetEligibleEvents]);
 
   // 봉 단위(chartInterval) 변경 시 선택 초기화 — 봉 단위가 바뀌면 근접 봉 좌표가 달라지므로
   // 이전 선택을 유지하면 SVG 연결선이 엉뚱한 봉을 가리킬 수 있다.
@@ -140,7 +160,14 @@ export default function HistoryPanel() {
   // 이전에 선택했던 카테고리(예: EQUITY MACRO 미노출)가 invisible 상태로 잔존할 수 있다.
   useEffect(() => {
     setCategoryFilter("ALL");
+    setMacroTypeFilter("ALL");
   }, [ticker]);
+
+  // KR6-B — categoryFilter 가 MACRO 가 아닐 때는 macroTypeFilter 를 ALL 로 reset.
+  // 다음에 다시 MACRO 로 돌아왔을 때 잔존 선택이 없도록 한다.
+  useEffect(() => {
+    if (categoryFilter !== "MACRO") setMacroTypeFilter("ALL");
+  }, [categoryFilter]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -247,6 +274,13 @@ export default function HistoryPanel() {
             counts={categoryCounts}
             assetType={lazyAssetType}
           />
+          {categoryFilter === "MACRO" && (
+            <MacroSubFilterChips
+              selected={macroTypeFilter}
+              onChange={setMacroTypeFilter}
+              counts={macroTypeCounts}
+            />
+          )}
           <ImportanceFilter value={importanceFilter} onChange={setImportanceFilter} />
           {visibleEvents.length === 0 ? (
             <div className="flex h-24 items-center justify-center">
