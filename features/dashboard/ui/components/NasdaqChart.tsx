@@ -31,7 +31,16 @@ import ChartIntervalTabs from "@/features/dashboard/ui/components/ChartIntervalT
 
 const MARKER_COLOR_SELECTED = "#a855f7";
 // 한국식: 상승 = 빨강, 하락 = 파랑 (ADR-0001 §4 결정)
-const ANOMALY_COLOR_STAR = "#EAB308";
+const ANOMALY_COLOR_STAR = "#EAB308";       // zscore — 노랑 ★
+const ANOMALY_COLOR_CUMULATIVE_5D = "#F97316";  // 5일 누적 — 오렌지 🔻
+const ANOMALY_COLOR_CUMULATIVE_20D = "#DC2626"; // 20일 누적 — 진홍 📉
+
+// OKR 다층 탐지 — backend type 별 마커 텍스트·색.
+const ANOMALY_MARKER_BY_TYPE: Record<string, { text: string; color: string }> = {
+  zscore:         { text: "★", color: ANOMALY_COLOR_STAR },
+  cumulative_5d:  { text: "🔻", color: ANOMALY_COLOR_CUMULATIVE_5D },
+  cumulative_20d: { text: "📉", color: ANOMALY_COLOR_CUMULATIVE_20D },
+};
 
 export default function NasdaqChart() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -236,13 +245,14 @@ export default function NasdaqChart() {
         }
       }
       for (const [barTime, ev] of strongestByBar) {
+        const variant = ANOMALY_MARKER_BY_TYPE[ev.type ?? "zscore"] ?? ANOMALY_MARKER_BY_TYPE.zscore;
         markers.push({
           time: barTime as Time,
           position: ev.direction === "up" ? "aboveBar" : "belowBar",
           shape: "circle",
-          color: ANOMALY_COLOR_STAR,
+          color: variant.color,
           size: 0,
-          text: "★",
+          text: variant.text,
         });
       }
     }

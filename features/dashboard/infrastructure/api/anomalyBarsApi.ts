@@ -2,10 +2,14 @@ import { httpClient } from "@/infrastructure/http/httpClient";
 import type { ApiResponse } from "@/infrastructure/http/apiResponse";
 import type { ChartInterval } from "@/features/dashboard/domain/model/chartInterval";
 
+// OKR 다층 탐지 — 봉 마커 type. backend default "zscore" backward-compat.
+export type AnomalyBarType = "zscore" | "cumulative_5d" | "cumulative_20d";
+
 /**
- * 차트 이상치 봉 1건 (§13.4 C / §17).
- * - return_pct: 해당 봉의 수익률(%) — 직전 봉 대비.
- * - z_score: (return_pct/100 - μ) / σ, 봉 단위별 rolling window 기준.
+ * 차트 이상치 봉 1건 (§13.4 C / §17 / OKR 다층 탐지).
+ * - type: 탐지기 분류. zscore=★ / cumulative_5d=🔻 / cumulative_20d=📉
+ * - return_pct: type 별 수익률(%). zscore=직전 봉 대비 / cumulative_*=N일 누적.
+ * - z_score: (return_pct/100 - μ) / σ. 누적 탐지에선 0.0 (의미 없음).
  * - direction: "up" | "down" — 프론트 색 구분용 (한국식 up=빨강 / down=파랑).
  * - volume_ratio: σ window 평균 거래량 대비 배수. window 부족/평균 0 시 null.
  * - time_of_day: 일봉(1D) 한정 갭/장중 근사. "GAP" | "INTRADAY". 그 외 null.
@@ -14,6 +18,7 @@ import type { ChartInterval } from "@/features/dashboard/domain/model/chartInter
  */
 export interface AnomalyBar {
   date: string; // ISO "yyyy-mm-dd"
+  type?: AnomalyBarType; // backend default "zscore" — 옛 응답 호환
   return_pct: number;
   z_score: number;
   direction: "up" | "down";

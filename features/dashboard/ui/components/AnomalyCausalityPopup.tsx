@@ -152,8 +152,32 @@ export default function AnomalyCausalityPopup() {
               id="anomaly-causality-title"
               className="text-base font-bold text-zinc-900 dark:text-zinc-50"
             >
-              <span className="mr-1.5 text-yellow-500">★</span>
-              이상치 봉 인과 분석
+              {/* OKR 다층 탐지 — type 별 마커·라벨. backend default "zscore" 호환. */}
+              {(() => {
+                const t = bar.type ?? "zscore";
+                if (t === "cumulative_5d") {
+                  return (
+                    <>
+                      <span className="mr-1.5">🔻</span>
+                      5일 누적 변동 분석
+                    </>
+                  );
+                }
+                if (t === "cumulative_20d") {
+                  return (
+                    <>
+                      <span className="mr-1.5">📉</span>
+                      20일 누적 변동 분석
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <span className="mr-1.5 text-yellow-500">★</span>
+                    이상치 봉 인과 분석
+                  </>
+                );
+              })()}
             </h2>
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               {ticker} · {bar.date}
