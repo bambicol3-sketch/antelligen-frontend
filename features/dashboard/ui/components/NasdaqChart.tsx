@@ -249,9 +249,11 @@ export default function NasdaqChart() {
         const evType = ev.type ?? "zscore";
         if (!markerVisibility[evType]) continue;
         if (evType === "zscore" && visibleBarCount != null) {
+          // KR1 종목 군별 floor (KOSPI 5/KOSDAQ 7/US 5) 와 동일 threshold 면 줌 필터 효과 0.
+          // floor 보다 높게 잡아 줌 아웃 시 backend 데이터를 frontend 가 추가로 거름.
           const absReturn = Math.abs(ev.return_pct);
-          if (visibleBarCount > 500 && absReturn < 7) continue;
-          else if (visibleBarCount > 200 && absReturn < 5) continue;
+          if (visibleBarCount > 500 && absReturn < 10) continue;
+          else if (visibleBarCount > 200 && absReturn < 7) continue;
         }
         const evTs = new Date(ev.date).getTime();
         let closestTime = chartBars[0].time;
