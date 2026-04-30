@@ -51,6 +51,12 @@ function formatTime(value: string): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+const IMPORTANCE_ORDER: Record<ScheduleImportance, number> = {
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
+};
+
 function groupByDate(events: EconomicSchedule[]): Map<string, EconomicSchedule[]> {
   const map = new Map<string, EconomicSchedule[]>();
   for (const ev of events) {
@@ -61,7 +67,11 @@ function groupByDate(events: EconomicSchedule[]): Map<string, EconomicSchedule[]
     map.set(key, list);
   }
   for (const [, list] of map) {
-    list.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt));
+    list.sort((a, b) => {
+      const diff = IMPORTANCE_ORDER[a.importance] - IMPORTANCE_ORDER[b.importance];
+      if (diff !== 0) return diff;
+      return a.releaseAt.localeCompare(b.releaseAt);
+    });
   }
   return map;
 }
