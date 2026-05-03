@@ -24,6 +24,7 @@ const menuItems = [
   { label: "히스토리", href: "/dashboard" },
   { label: "스마트 머니", href: "/smart-money" },
   { label: "글로벌 포트폴리오", href: "/smart-money/global-portfolio" },
+  { label: "나딱구 공부방", href: "/study-room" },
 ];
 
 interface NavbarProps {
