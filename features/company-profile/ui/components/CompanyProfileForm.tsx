@@ -5,6 +5,7 @@ import { HttpError } from "@/infrastructure/http/httpClient";
 import type { CompanyProfile } from "@/features/company-profile/domain/model/companyProfile";
 import { fetchCompanyProfile } from "@/features/company-profile/infrastructure/api/companyProfileApi";
 import CompanyProfileCard from "@/features/company-profile/ui/components/CompanyProfileCard";
+import { RevenueCompositionPieChart } from "@/features/company-profile/ui/components/RevenueCompositionPieChart";
 
 export default function CompanyProfileForm() {
   const [ticker, setTicker] = useState("");
@@ -69,7 +70,16 @@ export default function CompanyProfileForm() {
         </div>
       )}
 
-      {profile && <CompanyProfileCard profile={profile} />}
+      {profile && (
+        <>
+          <CompanyProfileCard profile={profile} />
+          {profile.asset_type === "EQUITY" && (
+            <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <RevenueCompositionPieChart segments={profile.revenue_segments ?? []} />
+            </div>
+          )}
+        </>
+      )}
 
       {!profile && !error && !loading && (
         <div className="rounded-md border border-zinc-200 bg-zinc-50 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">

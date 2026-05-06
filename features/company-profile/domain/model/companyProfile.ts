@@ -6,6 +6,11 @@ export type OverviewSource =
   | "asset_llm_only"
   | null;
 
+export interface RevenueSegment {
+  name: string;
+  percent: number;
+}
+
 export interface CompanyProfile {
   corp_code: string;
   corp_name: string;
@@ -28,6 +33,7 @@ export interface CompanyProfile {
   asset_type: AssetType;
   business_summary: string | null;
   main_revenue_sources: string[];
+  revenue_segments: RevenueSegment[];
   overview_source: OverviewSource;
   founding_story: string | null;
   business_model: string | null;
