@@ -63,12 +63,30 @@ const NAV_SCRIPT = `
 </script>
 `;
 
+// 외부 HTML 푸터에 박혀 있는 "피드백: <mailto>" 블록만 제거한다.
+// 시작 div 의 class 를 정확히 매치해 상위 row 가 잡히는 것을 방지한다.
+const FEEDBACK_BLOCK_REGEX =
+  /<div[^>]*class="col-12 text-center mt-3"[^>]*>\s*<p[^>]*>[\s\S]*?피드백[\s\S]*?mailto:[\s\S]*?<\/p>\s*<\/div>/g;
+
+// 외부 HTML 네비게이션의 종목 검색 박스(<li>...stock-search-container...</li>)를 제거한다.
+// iframe(srcDoc + allow-same-origin) 안에서 호출되는 /stock/search?q=... fetch 가
+// 부모 origin(Next.js)으로 떨어져 404 가 되는 것을 방지한다.
+const STOCK_SEARCH_BLOCK_REGEX =
+  /<li[^>]*>\s*<div[^>]*class="stock-search-container"[^>]*>[\s\S]*?<\/li>/g;
+
+function stripExternalArtifacts(html: string): string {
+  return html
+    .replace(FEEDBACK_BLOCK_REGEX, "")
+    .replace(STOCK_SEARCH_BLOCK_REGEX, "");
+}
+
 export function wrapDashboardHtml(html: string): string {
   if (!html) return html;
-  if (html.includes("</body>")) {
-    return html.replace("</body>", `${NAV_SCRIPT}</body>`);
+  const cleaned = stripExternalArtifacts(html);
+  if (cleaned.includes("</body>")) {
+    return cleaned.replace("</body>", `${NAV_SCRIPT}</body>`);
   }
-  return `${html}${NAV_SCRIPT}`;
+  return `${cleaned}${NAV_SCRIPT}`;
 }
 
 export interface StudyRoomNavMessage {
